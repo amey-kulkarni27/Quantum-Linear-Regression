@@ -3,15 +3,19 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 from dwave.system import DWaveSampler, EmbeddingComposite
+from sklearn.metrics import mean_squared_error as mse
+from sklearn.linear_model import LinearRegression
+
+np.random.seed(42)
 
 N = 10
-d = 4
+d = 2
 precision = 3
 dim = (d + 1) * precision
 
 data = np.random.rand(N, d)
-# Y = np.random.rand(N)
-Y = data[:, 0] + 1.5 * data[:, 2] + data[:, 3] * 0.25
+Y = np.random.rand(N)
+# Y = 0.5 * data[:, 0] + 1.25 * data[:, 1]
 X = np.ones((N, d + 1))
 X[:, :-1] = data
 XtX = np.matmul(X.T, X)
@@ -57,7 +61,7 @@ for i in range(d + 1):
 
 
 sampler = EmbeddingComposite(DWaveSampler())
-sampleset = sampler.sample_qubo(Q, num_reads=20, chain_strength=1)
+sampleset = sampler.sample_qubo(Q, num_reads=20, chain_strength=10)
 
 # Print the entire sampleset, that is, the entire table
 print(sampleset)
@@ -69,11 +73,20 @@ for sample, energy in sampleset.data(['sample', 'energy']):
 
 sol_no = 1
 for di in distributions:
-    wts = [0.0 for i in range(d + 1)]
+    wts = np.array([0.0 for i in range(d + 1)])
     for x in range(dim):
         i = x // precision
         k = x % precision # The p^th of the bits we are using to represent the i^th item
         wts[i] += di[x] / pow(2, k)
-    print(str(sol_no) + "-")
-    print("Weights:", wts)
-    sol_no += 1
+    if sol_no == 1:
+        print(str(sol_no) + "-")
+        Y_pred = np.matmul(X, wts)
+        err = mse(Y, Y_pred)
+        print("Error: ", err)
+        print("Weights:", wts)
+        sol_no += 1
+
+clf = LinearRegression()
+clf.fit(X, Y)
+print(clf.coef_)
+print("MSE Sklearn: ",mse(clf.predict(X),Y))
