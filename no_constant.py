@@ -9,15 +9,19 @@ from sklearn.linear_model import LinearRegression
 np.random.seed(42)
 
 N = 10
-d = 2
+d = 4
 precision = 3
-dim = (d + 1) * precision
+dim = d * (2 * precision)
 
-data = np.random.rand(N, d)
+def multiplier(x):
+    if x <= 2:
+        return 1
+    else:
+        return -1
+
+X = np.random.rand(N, d)
 Y = np.random.rand(N)
-# Y = 0.5 * data[:, 0] + 1.25 * data[:, 1]
-X = np.ones((N, d + 1))
-X[:, :-1] = data
+# Y = 0.5 * X[:, 0] + 1.25 * X[:, 1]
 XtX = np.matmul(X.T, X)
 XtY = np.matmul(X.T, Y)
 
@@ -29,35 +33,35 @@ G.add_edges_from([(i, j) for i in range(dim) for j in range(i + 1, dim)])
 Q = defaultdict(int)
 
 # Now consider the objective function. It is one big function divided into different blocks
-# For now, the weights are [1, 0.5, 0.25 ...] depending on the precision bits required
+# For now, the weights are [1, 0.5, 0.25, -1, -0.5, -0.25] depending on the precision bits required
 
 # First term, same weights
-for i in range(d + 1):
+for i in range(d):
     xii = XtX[i, i]
-    for k in range(precision):
-        d1 = i * precision + k
-        Q[(d1, d1)] += xii / pow(2, 2 * k)
-        for l in range(k + 1, precision):
-            d2 = i * precision + l
-            Q[(d1, d2)] += 2 * xii / pow(2, k + l)
+    for k in range(2 * precision):
+        d1 = i * 2 * precision + k
+        Q[(d1, d1)] += xii / pow(2, 2 * (k % precision))
+        for l in range(k + 1, 2 * precision):
+            d2 = i * 2 * precision + l
+            Q[(d1, d2)] += 2 * xii / pow(2, k % precision + l % precision) * multiplier(k) * multiplier(l)
 
 # First term, different weights
-for i in range(d + 1):
-    for j in range(i + 1, d + 1):
+for i in range(d):
+    for j in range(i + 1, d):
         xij = XtX[i, j]
-        for k in range(precision):
-            for l in range(precision):
-                d1 = i * precision + k
-                d2 = j * precision + l
-                Q[(d1, d2)] += 2 * xij / pow(2, k + l)
+        for k in range(2 * precision):
+            for l in range(2 * precision):
+                d1 = i * 2 * precision + k
+                d2 = j * 2 * precision + l
+                Q[(d1, d2)] += 2 * xij / pow(2, k % precision + l % precision) * multiplier(k) * multiplier(l)
 
 
 # Second Term
-for i in range(d + 1):
+for i in range(d):
     xyi = XtY[i]
-    for k in range(precision):
-        d1 = i * precision + k
-        Q[(d1, d1)] -= 2 * xyi / pow(2, k)
+    for k in range(2 * precision):
+        d1 = i * 2 * precision + k
+        Q[(d1, d1)] -= 2 * xyi / pow(2, k % precision) * multiplier(k)
 
 
 sampler = EmbeddingComposite(DWaveSampler())
@@ -73,11 +77,11 @@ for sample, energy in sampleset.data(['sample', 'energy']):
 
 sol_no = 1
 for di in distributions:
-    wts = np.array([0.0 for i in range(d + 1)])
+    wts = np.array([0.0 for i in range(d)])
     for x in range(dim):
-        i = x // precision
-        k = x % precision
-        wts[i] += di[x] / pow(2, k)
+        i = x // (2 * precision)
+        k = x % (2 * precision)
+        wts[i] += di[x] / pow(2, k % precision) * multiplier(k)
     if sol_no == 1:
         print(str(sol_no) + "-")
         Y_pred = np.matmul(X, wts)
