@@ -8,14 +8,14 @@ from sklearn.linear_model import LinearRegression
 
 np.random.seed(42)
 
-N = 10
-d = 2
-precision = 3
+N = 100
+d = 3
+precision = 6
 dim = (d + 1) * precision
 
 data = np.random.rand(N, d)
 Y = np.random.rand(N)
-# Y = 0.5 * data[:, 0] + 1.25 * data[:, 1]
+# Y = 0.5 * data[:, 0] + 1.25 * data[:, 1] + 0.5 * data[:,2]
 X = np.ones((N, d + 1))
 X[:, :-1] = data
 XtX = np.matmul(X.T, X)
@@ -61,7 +61,7 @@ for i in range(d + 1):
 
 
 sampler = EmbeddingComposite(DWaveSampler())
-sampleset = sampler.sample_qubo(Q, num_reads=20, chain_strength=10)
+sampleset = sampler.sample_qubo(Q, num_reads=3000, chain_strength=15)
 
 # Print the entire sampleset, that is, the entire table
 print(sampleset)
@@ -79,14 +79,14 @@ for di in distributions:
         k = x % precision # The p^th of the bits we are using to represent the i^th item
         wts[i] += di[x] / pow(2, k)
     if sol_no == 1:
-        print(str(sol_no) + "-")
+        # print(str(sol_no) + "-")
         Y_pred = np.matmul(X, wts)
         err = mse(Y, Y_pred)
-        print("Error: ", err)
-        print("Weights:", wts)
+        print("Quantum Error: ", err)
+        # print("Quantum Weights:", wts)
         sol_no += 1
 
 clf = LinearRegression()
 clf.fit(X, Y)
-print(clf.coef_)
-print("MSE Sklearn: ",mse(clf.predict(X),Y))
+# print("Classical Sklearn Weights:", clf.coef_)
+print("Classical Sklearn Error: ",mse(clf.predict(X),Y))
