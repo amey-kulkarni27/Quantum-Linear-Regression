@@ -19,8 +19,8 @@ def select_features(X_train, y_train, features):
 np.random.seed(42)
 
 N = 10000
-d = 12
-precision = 5
+d = 15
+precision = 4
 dim = (d + 1) * precision
 
 data = np.random.rand(N, d*2)
