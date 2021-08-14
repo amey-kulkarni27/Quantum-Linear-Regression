@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 from matplotlib import pyplot
-
+import math
 # feature selection
 def select_features(X_train, y_train, features):
     fs = SelectKBest(score_func=f_regression, k=features)
@@ -19,18 +19,20 @@ def select_features(X_train, y_train, features):
 np.random.seed(42)
 
 N = 10000
-d = 12
-precision = 5
+d = 20
+factor = 2
+precision = 6
 dim = (d + 1) * precision
 
-data = np.random.rand(N, d*2)
+data = np.random.rand(N, d*factor)
 Y = np.random.rand(N)
 
 data_fs, fs = select_features(data,Y,d)
+importance = fs.scores_
 # Y = 0.5 * data[:, 0] + 1.25 * data[:, 1] + 0.5 * data[:,2]
 X = np.ones((N, d + 1))
 X[:, :-1] = data_fs
-X_sk = np.ones((N, 2*d + 1))
+X_sk = np.ones((N, factor*d + 1))
 X_sk[:, :-1] = data
 XtX = np.matmul(X.T, X)
 XtY = np.matmul(X.T, Y)
@@ -46,6 +48,12 @@ Q = defaultdict(int)
 # For now, the weights are [1, 0.5, 0.25 ...] depending on the precision bits required
 
 # First term, same weights
+D = factor*d
+high = sum(importance)
+importance /= high
+precision_list = list(map(math.ceil,importance*64))
+
+
 for i in range(d + 1):
     xii = XtX[i, i]
     for k in range(precision):
@@ -75,7 +83,7 @@ for i in range(d + 1):
 
 
 sampler = EmbeddingComposite(DWaveSampler())
-sampleset = sampler.sample_qubo(Q, num_reads=1500, chain_strength=9)
+sampleset = sampler.sample_qubo(Q, num_reads=1000, chain_strength=9)
 
 # Print the entire sampleset, that is, the entire table
 

@@ -8,9 +8,9 @@ from sklearn.linear_model import LinearRegression
 
 np.random.seed(42)
 
-N = 10
-d = 2
-precision = 3
+N = 1000
+d = 4
+precision = 6
 dim = (d + 1) * (2 * precision)
 
 def multiplier(x):
@@ -67,10 +67,10 @@ for i in range(d + 1):
 
 
 sampler = EmbeddingComposite(DWaveSampler())
-sampleset = sampler.sample_qubo(Q, num_reads=20, chain_strength=10)
+sampleset = sampler.sample_qubo(Q, num_reads=1500, chain_strength=10)
 
 # Print the entire sampleset, that is, the entire table
-print(sampleset)
+# print(sampleset)
 
 distributions = []
 
