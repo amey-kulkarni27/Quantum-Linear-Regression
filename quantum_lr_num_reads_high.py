@@ -76,7 +76,7 @@ for di in distributions:
     wts = np.array([0.0 for i in range(d + 1)])
     for x in range(dim):
         i = x // precision
-        k = x % precision
+        k = x % precision # The p^th of the bits we are using to represent the i^th item
         wts[i] += di[x] / pow(2, k)
     if sol_no == 1:
         # print(str(sol_no) + "-")
