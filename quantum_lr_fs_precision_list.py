@@ -33,6 +33,7 @@ high = sum(importance)
 importance /= high
 precision_list = list(map(math.ceil,importance*64))
 
+print(precision_list)
 assert(d == len(precision_list))
 for i in range(d):
     assert(precision_list[i] != 0)
@@ -69,10 +70,10 @@ for i in range(d + 1):
     precision = pref_prec[i + 1] - pref_prec[i]
     for k in range(precision):
         d1 = pref_prec[i] + k
-        Q[(d1, d1)] += xii / pow(2, 2 * (k - 2))
+        Q[(d1, d1)] += xii * pow(2, 2 * (k - 2))
         for l in range(k + 1, precision):
             d2 = pref_prec[i] + l
-            Q[(d1, d2)] += 2 * xii / pow(2, (k - 2) + (l - 2))
+            Q[(d1, d2)] += 2 * xii * pow(2, (k - 2) + (l - 2))
 
 # First term, different weights
 for i in range(d + 1):
@@ -84,7 +85,7 @@ for i in range(d + 1):
             for l in range(precision2):
                 d1 = pref_prec[i] + k
                 d2 = pref_prec[j] + l
-                Q[(d1, d2)] += 2 * xij / pow(2, (k - 2) + (l - 2))
+                Q[(d1, d2)] += 2 * xij * pow(2, (k - 2) + (l - 2))
 
 
 # Second Term
@@ -93,7 +94,7 @@ for i in range(d + 1):
     precision = pref_prec[i + 1] - pref_prec[i]
     for k in range(precision):
         d1 = pref_prec[i] + k
-        Q[(d1, d1)] -= 2 * xyi / pow(2, k - 2)
+        Q[(d1, d1)] -= 2 * xyi * pow(2, k - 2)
 
 
 sampler = EmbeddingComposite(DWaveSampler())
@@ -113,7 +114,7 @@ for di in distributions:
     for j in range(d + 1):
         precision = pref_prec[j + 1] - pref_prec[j]
         for k in range(precision):
-            wts[i] += di[pref_prec[j] + k] / pow(2, k - 2)
+            wts[i] += di[pref_prec[j] + k] * pow(2, k - 2)
     if sol_no == 1:
         # print(str(sol_no) + "-")
         Y_pred = np.matmul(X, wts)
